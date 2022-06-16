@@ -59,9 +59,9 @@ const BootcampSchema = new mongoose.Schema({
         required: true,
         enum: [
             'Web Development',
-            'Mobile Devlopment',
+            'Mobile Development',
             'UI/UX',
-            'Date Science',
+            'Data Science',
             'Business',
             'Other'
         ]
