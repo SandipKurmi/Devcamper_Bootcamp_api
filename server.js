@@ -1,32 +1,40 @@
 //create  express server
 const express = require('express');
 const dotenv = require('dotenv');
+const morgan = require('morgan')
+const colors = require('colors')
+const connectDB = require('./config/db')
 dotenv.config({ path: "./config/config.env" });
+
+//conect to database
+connectDB()
+
+const bootcamps = require("./routes/bootcamps")
 const app = express();
-const bodyParser = require('body-parser');
+
+//Body parser
+app.use(express.json())
 
 
-app.post('/api/v1/bootcamps', (req, res) => {
-    res.status(201).json({ success: true, msg: "bootcamps is created" });
+
+app.use(morgan("dev"))
+
+//moutn routers
+app.use('/api/v1/bootcamps', bootcamps)
+
+
+
+
+
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, console.log(`Server is running on port ${PORT}`.yellow.bold));
+
+//Handle unhandled pormise rejection
+process.on('unhandledRejection', (err, promise) => {
+    console.log(`Error: ${err.message}`.red);
+
+    //close server & exit process
+    server.close(() => {
+        process.exit(1)
+    })
 })
-
-
-app.get('/api/v1/bootcamps', (req, res) => {
-    res.status(200).json({ success: true, msg: "see all bootcamps" })
-})
-
-app.get('/api/v1/bootcamps/:id', (req, res) => {
-    res.status(200).json({ success: true, msg: `see one bootcamps with id: ${req.params.id}` })
-})
-
-app.put('/api/v1/bootcamps/:id', (req, res) => {
-    res.status(200).json({ success: true, msg: `bootcamp is updated with id: ${req.params.id} ` })
-})
-
-
-app.delete('/api/v1/bootcamps/:id', (req, res) => {
-    res.status(200).json({ success: true, msg: `bootcamp with id: ${req.params.id} deleted` })
-})
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, console.log(`Server is running on port ${PORT}`));
