@@ -6,6 +6,7 @@ dotenv.config({ path: "./config/config.env" });
 
 //Load models
 const Bootcamp = require('./models/Bootcamp');
+const Course = require('./models/Course')
 
 //connect to DB
 mongoose.connect('mongodb://localhost:27017/devcamper', () => {
@@ -16,12 +17,16 @@ mongoose.connect('mongodb://localhost:27017/devcamper', () => {
 const bootcamps = JSON.parse(
     fs.readFileSync(`/home/xsquare-110/Desktop/learn react/DEVCAMPER_API/data/bootcamps.json`, 'utf-8')
 );
+const courses = JSON.parse(
+    fs.readFileSync(`/home/xsquare-110/Desktop/learn react/DEVCAMPER_API/data/courses.json`, 'utf-8')
+)
 
 //import into DB 
 
 const importData = async () => {
     try {
         await Bootcamp.create(bootcamps);
+        await Course.create(courses)
         console.log('data imported...'.green.inverse);
         process.exit();
     } catch (error) {
@@ -33,6 +38,7 @@ const importData = async () => {
 const deleteData = async () => {
     try {
         await Bootcamp.deleteMany();
+        await Course.deleteMany()
         console.log('Data Destroyed...'.red.inverse);
         process.exit();
     } catch (error) {
