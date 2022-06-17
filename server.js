@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan')
 const colors = require('colors')
+const errorHandler = require('./middleware/error')
 const connectDB = require('./config/db')
 dotenv.config({ path: "./config/config.env" });
 
@@ -21,7 +22,7 @@ app.use(morgan("dev"))
 
 //moutn routers
 app.use('/api/v1/bootcamps', bootcamps)
-
+app.use(errorHandler)
 
 
 
