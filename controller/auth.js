@@ -1,8 +1,8 @@
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async')
 const geocoder = require('../utils/geocoder')
+const sendEmail = require('../utils/sendEmail')
 const User = require('../models/User')
-
 
 
 //@desc Register user
@@ -10,7 +10,6 @@ const User = require('../models/User')
 //@access Public
 
 exports.register = asyncHandler(async (req, res, next) => {
-    console.log(req.body);
     const { name, email, role, password } = req.body;
 
     //Create user
@@ -18,13 +17,8 @@ exports.register = asyncHandler(async (req, res, next) => {
         name, email, role, password
     });
 
-    //CREATE TOKEN
-    const token = user.getSignedJwtToken();
+    sendTokenResponse(user, 200, res)
 
-    res.status(200).json({
-        sucess: true,
-        token: token
-    })
 })
 
 //@desc Loging user
@@ -32,7 +26,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 //@access Public
 
 exports.login = asyncHandler(async (req, res, next) => {
-    console.log(req.body);
+
     const { email, password } = req.body;
 
     //Validate email and password
@@ -48,14 +42,96 @@ exports.login = asyncHandler(async (req, res, next) => {
 
     }
 
+    //Check if password matches
+    const isMatch = await user.matchPassword(password);
+
+    if (!isMatch) {
+        return next(new ErrorResponse('invalid credentials', 401))
+    }
+
+
+    sendTokenResponse(user, 200, res)
+
+})
 
 
 
-    //CREATE TOKEN
+//Get token from model , create cookie and send response
+const sendTokenResponse = (user, statusCode, res) => {
+    //create token
     const token = user.getSignedJwtToken();
+
+    const options = {
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+        httpOnly: true
+    };
+
+    if (process.env.NODE_ENV === 'production') {
+        options.secure = true;
+    }
+
+    res.status(statusCode)
+        .cookie('token', token, options)
+        .json({
+            sucess: true,
+            token
+        })
+}
+
+
+//@desc Get user
+//@route Post /api/v1/auth/me
+//@access Private
+
+exports.getMe = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
 
     res.status(200).json({
         sucess: true,
-        token: token
+        data: user
+    })
+})
+
+
+//@desc Forget password 
+//@route POST /api/v1/auth/forgotpassword
+//@access PUBLIC
+
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+        return next(new ErrorResponse(`There is no user with that email`, 404))
+    }
+
+    //Get reset token
+    const resetToken = user.getResetPasswordToken();
+
+    await user.save({ validateBeforeSave: false })
+
+    //Create reset url
+    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/resetpassword/${resetToken}`
+
+    const message = `You are receving this email because you (or someone else) has requested the 
+    the reset of a passwored. please make a PUT request to: \n\n ${resetUrl} `;
+
+    try {
+        await sendEmail({
+            email: user.email,
+            subject: 'Password reset token',
+            message
+        })
+        res.status(200).json({ sucess: true, data: 'Email sent' })
+    } catch (error) {
+        console.log(error);
+        user.getResetPasswordToken = undefined;
+        user.getResetPasswordExpire = undefined;
+
+        await user.save({ validateBeforeSave: false });
+        return next(new ErrorResponse('Email could not be sent ', 500));
+    }
+    res.status(200).json({
+        sucess: true,
+        data: user
     })
 })
