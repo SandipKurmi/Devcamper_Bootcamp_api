@@ -4,7 +4,6 @@ const advancedResult = (model, populate) => async (req, res, next) => {
 
     //Copy req.query
     const reqQuery = { ...req.query }
-    console.log(reqQuery);
 
     //Fields to exclude
     const removeFields = ['select', 'sort', 'page', 'limit'];
@@ -52,6 +51,8 @@ const advancedResult = (model, populate) => async (req, res, next) => {
 
     //Executinig query
     const results = await query
+
+    //if any problem console.log(results)
 
     //Pagination result
     const pagination = {};
