@@ -12,7 +12,7 @@ const Review = require('./models/Review');
 
 
 //connect to DB
-mongoose.connect('mongodb://localhost:27017/devcamper', () => {
+mongoose.connect(process.env.MONGO_URI, () => {
     console.log(`MongoDB Connected with Database`.cyan.bold);
 });
 
