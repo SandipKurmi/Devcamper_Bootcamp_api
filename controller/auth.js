@@ -56,6 +56,23 @@ exports.login = asyncHandler(async (req, res, next) => {
 })
 
 
+//@desc Log user out / clear cookie
+//@route Get /api/v1/auth/logout
+//@access Private
+
+exports.logout = asyncHandler(async (req, res, next) => {
+    res.cookie('token', 'none', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    });
+
+    res.status(200).json({
+        sucess: true,
+        data: {}
+    })
+})
+
+
 //Get token from model , create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
     //create token
@@ -119,7 +136,7 @@ exports.updateDetails = asyncHandler(async (req, res, next) => {
 
 exports.updatePassword = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user.id).select('+password');
-    console.log(user)
+    // console.log(user)
     console.log((await user.matchPassword(req.body.currentPassword)))
     //Check current password
     if (!(await user.matchPassword(req.body.currentPassword))) {
@@ -147,7 +164,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
     // Get reset token
     const resetToken = user.getResetPasswordToken();
-    console.log(resetToken)
+    // console.log(resetToken)
 
     await user.save({ validateBeforeSave: false });
 
@@ -156,7 +173,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
         'host',
     )}/api/v1/auth/resetpassword/${resetToken}`;
 
-    console.log(resetUrl)
+    // console.log(resetUrl)
 
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
 

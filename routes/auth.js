@@ -1,6 +1,6 @@
 const express = require('express')
 
-const { register, login, getMe, forgotPassword, resetPassword, updateDetails, updatePassword } = require('../controller/auth')
+const { logout, register, login, getMe, forgotPassword, resetPassword, updateDetails, updatePassword } = require('../controller/auth')
 const { protect } = require('../middleware/auth')
 
 
@@ -13,6 +13,7 @@ router.put('/updatedetails', protect, updateDetails)
 router.put('/updatepassword', protect, updatePassword)
 router.post('/forgotpassword', forgotPassword)
 router.put('/resetpassword/:resettoken', resetPassword)
+router.get('/logout', logout)
 
 
 
